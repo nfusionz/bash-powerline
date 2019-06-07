@@ -16,13 +16,27 @@ __powerline() {
     readonly SYMBOL_GIT_PUSH='↑'
     readonly SYMBOL_GIT_PULL='↓'
 
+    readonly BASE_STYLE="37;44"
+    readonly BASE_STR="\u"
+    readonly CWD_STYLE="37;45"
+    readonly GIT_STYLE="30;46"
+    readonly PS_STYLE_ZERO="37;42"
+    readonly PS_STYLE_ERR="37;41"
+
     if [[ -z "$PS_SYMBOL" ]]; then
       case "$(uname)" in
           Darwin)   PS_SYMBOL='';;
-          Linux)    PS_SYMBOL='$';;
+          Linux)    PS_SYMBOL='λ';;
           *)        PS_SYMBOL='%';;
       esac
     fi
+
+    # Takes the text and style
+    __block() {
+	if [[ -n $1 ]]; then
+	    printf "\[\033[%sm\] %s %s" "$2" "$1" "$RESET"
+	fi
+    }
 
     __git_info() { 
         [[ $POWERLINE_GIT = 0 ]] && return # disabled
@@ -56,19 +70,19 @@ __powerline() {
         done < <($git_eng status --porcelain --branch 2>/dev/null)  # note the space between the two <
 
         # print the git branch segment without a trailing newline
-        printf " $ref$marks"
+        printf "$ref$marks"
     }
 
     ps1() {
         # Check the exit code of the previous command and display different
         # colors in the prompt accordingly. 
         if [ $? -eq 0 ]; then
-            local symbol="$COLOR_SUCCESS $PS_SYMBOL $RESET"
+            local symbol="$(__block $PS_SYMBOL $PS_STYLE_ZERO)"
         else
-            local symbol="$COLOR_FAILURE $PS_SYMBOL $RESET"
+            local symbol="$(__block $PS_SYMBOL $PS_STYLE_ERR)"
         fi
 
-        local cwd="$COLOR_CWD\w$RESET"
+        local cwd="\w"
         # Bash by default expands the content of PS1 unless promptvars is disabled.
         # We must use another layer of reference to prevent expanding any user
         # provided strings, which would cause security issues.
@@ -76,13 +90,15 @@ __powerline() {
         # Related fix in git-bash: https://github.com/git/git/blob/9d77b0405ce6b471cb5ce3a904368fc25e55643d/contrib/completion/git-prompt.sh#L324
         if shopt -q promptvars; then
             __powerline_git_info="$(__git_info)"
-            local git="$COLOR_GIT\${__powerline_git_info}$RESET"
+            local git="\${__powerline_git_info}"
         else
             # promptvars is disabled. Avoid creating unnecessary env var.
-            local git="$COLOR_GIT$(__git_info)$RESET"
+            local git="$(__git_info)"
         fi
 
-        PS1="$cwd$git$symbol"
+	PS1="$(__block $BASE_STR $BASE_STYLE)"
+	PS1+="$(__block $cwd $CWD_STYLE)"
+	PS1+="$(__block $git $GIT_STYLE)$symbol "
     }
 
     PROMPT_COMMAND="ps1${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
