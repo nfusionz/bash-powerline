@@ -27,7 +27,7 @@ __powerline() {
     readonly CWD_BG_EXTRA=""
     readonly CWD_FG="1;37"
 
-    readonly GIT_BG_COLOR=46
+    readonly GIT_BG_COLOR=47
     readonly GIT_BG_EXTRA=""
     readonly GIT_FG="1;30"
 
@@ -107,8 +107,6 @@ __powerline() {
     }
 
     ps1() {
-
-	unset __LAST_BG
 	
         # Check the exit code of the previous command and display different
         # colors in the prompt accordingly. 
@@ -117,6 +115,8 @@ __powerline() {
         else
             local style=("$PS_ERR_BG_COLOR" "$PS_ERR_FG")
         fi
+
+	unset __LAST_BG
 
         local cwd="\w"
         # Bash by default expands the content of PS1 unless promptvars is disabled.
