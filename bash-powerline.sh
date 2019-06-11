@@ -3,8 +3,8 @@
 ## Uncomment to disable git info
 #POWERLINE_GIT=0
 
-## Uncomment to disable spacing
-#POWERLINE_SPACING=0
+## Uncomment to enable powerline-fonts
+#POWERLINE_FONTS=1
 
 ## Uncomment to disable separator overlap
 #POWERLINE_OVERLAP=0
@@ -14,6 +14,15 @@ __powerline() {
     # readonly SYMBOL_GIT_BRANCH='⑂'
     readonly SYMBOL_GIT_PUSH='↑'
     readonly SYMBOL_GIT_PULL='↓'
+
+    if [[ $POWERLINE_FONTS -eq 1 ]]; then
+	readonly PS_DIVIDER=''
+    else
+	readonly PS_DIVIDER=''
+    fi
+
+    readonly DEFAULT_BG_COLOR=49
+    readonly DEFAULT_FG='39'
 
     readonly BASE_BG_COLOR=46
     readonly BASE_BG_EXTRA=""
@@ -36,8 +45,6 @@ __powerline() {
     readonly PS_ERR_BG_EXTRA=''
     readonly PS_ZERO_FG='1;37'
     readonly PS_ERR_FG='1;37'
-
-    readonly PS_DIVIDER=""
 
     if [[ -z "$PS_SYMBOL" ]]; then
       case "$(uname)" in
@@ -83,9 +90,9 @@ __powerline() {
     }
 
     # Adds to PS1
-    # Takes the text, block_bg, block_fg, redirect boolean (for security reasons)
+    # Takes the text, block_bg, block_fg, disable spacing, redirect boolean (for security reasons)
     __block() {
-	if [[ -n $1 ]]; then
+	if [[ -n $1 ]]; then	    
 	    if [[ -n "$__LAST_BG" ]]; then
 		if [[ $POWERLINE_OVERLAP = 0 ]]; then
 		    PS1+="$PS_DIVIDER"
@@ -95,16 +102,18 @@ __powerline() {
 		fi
 	    fi
 
-	    PS1+="\[\033[$2;$3m\] "
+	    PS1+="\[\033[$2;$3m\]"
+	    [[ $4 -eq 1 ]] || PS1+=" "
 	    shopt -q promptvars
-	    if [[ $? && $4 -eq 1 ]]; then
+	    if [[ $? && $5 -eq 1 ]]; then
 		__redirect+="$1"
 		PS1+="\${__redirect[$__redirect_counter]}"
 		__redirect_counter+=1
 	    else
 		PS1+="$1"
 	    fi
-	    PS1+=" \[\033[m\]"
+	    [[ $4 -eq 1 ]] || PS1+=" "
+	    PS1+="\[\033[m\]"
 	    __LAST_BG=$2
 	fi
     }
@@ -114,9 +123,9 @@ __powerline() {
         # Check the exit code of the previous command and display different
         # colors in the prompt accordingly. 
         if [ $? -eq 0 ]; then
-            local style=("$PS_ZERO_BG_COLOR" "$PS_ZERO_FG")
+            local ps_style=("$PS_ZERO_BG_COLOR" "$PS_ZERO_FG")
         else
-            local style=("$PS_ERR_BG_COLOR" "$PS_ERR_FG")
+            local ps_style=("$PS_ERR_BG_COLOR" "$PS_ERR_FG")
         fi
 
 	unset __LAST_BG
@@ -137,9 +146,9 @@ __powerline() {
 	PS1=""
 	__block "$BASE_STR" "$BASE_BG_COLOR" "$BASE_FG"
 	__block "$cwd" "$CWD_BG_COLOR" "$CWD_FG"
-	__block "$git" "$GIT_BG_COLOR" "$git_style" 1
-	__block "$PS_SYMBOL" "${style[0]}" "${style[1]}"
-	PS1+=" "
+	__block "$git" "$GIT_BG_COLOR" "$git_style" 0 1
+	__block "$PS_SYMBOL" "${ps_style[0]}" "${ps_style[1]}"
+	__block " " "$DEFAULT_BG_COLOR" "$DEFAULT_FG" 1
     }
 
     PROMPT_COMMAND="ps1${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
