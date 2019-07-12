@@ -118,6 +118,17 @@ __powerline() {
 	fi
     }
 
+    __short_path() {
+	local short=""
+	local path="$(dirs)"
+	while [[ $path =~ ^((\/?)([^\n\/])[^\n\/]*\/) ]]; do
+	    short+="${BASH_REMATCH[2]}${BASH_REMATCH[3]}/"
+	    path=${path#*"${BASH_REMATCH[1]}"}
+	done
+	short+="$path"
+	echo "$short"
+    }
+
     ps1() {
 	
         # Check the exit code of the previous command and display different
@@ -130,7 +141,7 @@ __powerline() {
 
 	unset __LAST_BG
 
-        local cwd="\w"
+        local cwd=$(__short_path) #"\w"
         
 	__redirect=()
 	__redirect_counter=0
@@ -147,7 +158,7 @@ __powerline() {
 	__block "$BASE_STR" "$BASE_BG_COLOR" "$BASE_FG"
 	__block "$cwd" "$CWD_BG_COLOR" "$CWD_FG"
 	__block "$git" "$GIT_BG_COLOR" "$git_style" 0 1
-	__block "$PS_SYMBOL" "${ps_style[0]}" "${ps_style[1]}"
+	__block "$PS_SYMBOL" "${ps_style[0]}" "${ps_style[1]}" 0
 	__block " " "$DEFAULT_BG_COLOR" "$DEFAULT_FG" 1
     }
 
